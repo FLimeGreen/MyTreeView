@@ -52,6 +52,16 @@ while true; do
     '[B') # Pfeil runter
       ((selected < count - 1)) && ((selected++))
       ;;
+    '[C') # Pfeil rechts
+      line="${lines[$selected]}"
+      read -ra parts <<<"$line" # splittet an Whitespace in Array
+      filetype="${parts[0]}"    # "drwxr-xr-x"
+      name="${parts[8]}"        # Spalte 9 = Dateiname
+      if [[ "${filetype:0:1}" == "d" ]]; then
+        cd "$name"
+        load_dir
+      fi
+      ;;
     '[D') # Pfeil links
       cd ..
       load_dir
@@ -59,6 +69,10 @@ while true; do
     '') # ESC ohne weitere Bytes → beenden
       echo -e "\nBeendet."
       break
+      ;;
+    # Nun kommen die funktionen
+    'n') # started nvim
+      nvim
       ;;
     esac
     draw
