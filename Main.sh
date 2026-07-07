@@ -91,6 +91,20 @@ while true; do
     "l") dic_down ;;  # Pfeil rechts
     "h") dic_up ;;    # Pfeil links
     "n") nvim ;;      # Neovim
+    "s")
+      result=$(bash fzf_search.sh dirs "$(pwd)")
+      if [[ -n "$result" && -d "$result" ]]; then
+        cd "$result"
+        load_dir
+      fi
+      ;;
+    "S")
+      result=$(bash fzf_search.sh all "$(pwd)")
+      if [[ -n "$result" ]]; then
+        cd "$(dirname "$result")"
+        load_dir
+      fi
+      ;;
 
     esac
   fi
