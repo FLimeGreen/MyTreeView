@@ -50,15 +50,14 @@ load_dir
 draw
 
 while true; do
-  # Liest bis zu 3 Bytes (für Escape-Sequenzen wie ^[[A)
   IFS= read -rsn1 key
-  if [[ $key == $'\e' ]]; then
+  if [[ $key == $'\e' ]]; then # Pfeiltasten Steuerung und ESC
     read -rsn2 -t 0.05 rest
     case "$rest" in
-    '[A') # Pfeil hoch
+    '[A')
       ((selected > 0)) && ((selected--))
       ;;
-    '[B') # Pfeil runter
+    '[B')
       ((selected < count - 1)) && ((selected++))
       ;;
     '[C')
@@ -68,19 +67,18 @@ while true; do
         load_dir
       fi
       ;;
-    '[D') # Pfeil links
+    '[D')
       cd ..
       load_dir
       ;;
-    '') # ESC ohne weitere Bytes → beenden
+    '')
       echo -e "\nBeendet."
       break
       ;;
-    # Nun kommen die funktionen
-    'n') # started nvim
-      nvim
-      ;;
     esac
-    draw
+  elif [[ $key == "n" ]]; then # Tasten Funktionen
+    nvim
   fi
+
+  draw
 done
