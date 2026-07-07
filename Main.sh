@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 # Liest Dateien/Verzeichnisse aus `ls -la` in ein Array
 # und lässt den User mit den Pfeiltasten durch die Zeilen navigieren
@@ -7,22 +6,27 @@
 declare -a lines
 selected=0
 
-# ls -la einlesen (ohne Headerzeile "total N")
-SkipFirstLine=true
-while IFS= read -r line; do
-  if [[ $SkipFirstLine == true ]]; then
-    SkipFirstLine=false
-  else
-    lines+=("$line")
-  fi
-done < <(ls -la)
+load_dir() {
+  lines=()
+  # ls -la einlesen (ohne Headerzeile "total N")
+  SkipFirstLine=true
+  while IFS= read -r line; do
+    if [[ $SkipFirstLine == true ]]; then
+      SkipFirstLine=false
+    else
+      lines+=("$line")
+    fi
+  done < <(ls -la)
 
-count=${#lines[@]}
+  # Reset Selection
+  selected=0
+  count=${#lines[@]}
+}
 
 draw() {
   clear
-  echo "─── ls -la  [↑↓ navigieren, ESC beenden] ───"
-  echo "insgesamt: ${count}"
+  echo "─── [↑↓ navigieren, ESC beenden] ───"
+  echo "  insgesamt: ${count}"
   for i in "${!lines[@]}"; do
     if [ "$i" -eq "$selected" ]; then
       echo -e "  \e[7m${lines[$i]}\e[0m" # invertiert = markiert
@@ -33,6 +37,7 @@ draw() {
   echo ""
 }
 
+load_dir
 draw
 
 while true; do
@@ -46,6 +51,10 @@ while true; do
       ;;
     '[B') # Pfeil runter
       ((selected < count - 1)) && ((selected++))
+      ;;
+    '[D') # Pfeil links
+      cd ..
+      load_dir
       ;;
     '') # ESC ohne weitere Bytes → beenden
       echo -e "\nBeendet."
