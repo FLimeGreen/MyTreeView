@@ -19,6 +19,8 @@ load_dir() {
     fi
   done < <(LC_ALL=C ls -la)
 
+  order_dir
+
   # Reset Selection
   selected=0
   count=${#lines[@]}
@@ -70,6 +72,7 @@ while true; do
     "n") nvim ;;      # Neovim
     "s") search_dic ;;
     "S") search_all ;;
+    "o") toggle_order_dir ;;
 
     esac
   fi
