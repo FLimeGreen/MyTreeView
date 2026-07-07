@@ -14,9 +14,12 @@ load_dir() {
     if [[ $SkipFirstLine == true ]]; then
       SkipFirstLine=false
     else
-      lines+=("$line")
+      if [[ "$line" =~ [A-Za-z]{3}\ +[0-9]+\ [0-9]{2}:[0-9]{2}\ (.*) ]]; then
+        name="${BASH_REMATCH[1]}"
+        lines+=("$line|$name")
+      fi
     fi
-  done < <(ls -la)
+  done < <(LC_ALL=C ls -la)
 
   # Reset Selection
   selected=0
@@ -25,13 +28,19 @@ load_dir() {
 
 draw() {
   clear
-  echo "─── [↑↓ navigieren, ESC beenden] ───"
+  echo "─── $(pwd)  [↑↓ navigieren, → rein, ← raus, ESC beenden] ───"
   echo "  insgesamt: ${count}"
   for i in "${!lines[@]}"; do
+    IFS='|' read -r rawline name <<<"${lines[$i]}"
+    filetype="${rawline:0:1}"
+    prefix=" "
+    if [[ "$filetype" == "d" ]]; then
+      prefix="/"
+    fi
     if [ "$i" -eq "$selected" ]; then
-      echo -e "  \e[7m${lines[$i]}\e[0m" # invertiert = markiert
+      echo -e "\e[7m${prefix} ${name}\e[0m"
     else
-      echo "  ${lines[$i]}"
+      echo "${prefix} ${name}"
     fi
   done
   echo ""
@@ -52,12 +61,9 @@ while true; do
     '[B') # Pfeil runter
       ((selected < count - 1)) && ((selected++))
       ;;
-    '[C') # Pfeil rechts
-      line="${lines[$selected]}"
-      read -ra parts <<<"$line" # splittet an Whitespace in Array
-      filetype="${parts[0]}"    # "drwxr-xr-x"
-      name="${parts[8]}"        # Spalte 9 = Dateiname
-      if [[ "${filetype:0:1}" == "d" ]]; then
+    '[C')
+      IFS='|' read -r rawline name <<<"${lines[$selected]}"
+      if [[ "${rawline:0:1}" == "d" ]]; then
         cd "$name"
         load_dir
       fi
