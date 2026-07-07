@@ -26,9 +26,30 @@ load_dir() {
   count=${#lines[@]}
 }
 
+move_up() {
+  ((selected > 0)) && ((selected--))
+}
+
+move_down() {
+  ((selected < count - 1)) && ((selected++))
+}
+
+dic_up() {
+  cd ..
+  load_dir
+}
+
+dic_down() {
+  IFS='|' read -r rawline name <<<"${lines[$selected]}"
+  if [[ "${rawline:0:1}" == "d" ]]; then
+    cd "$name"
+    load_dir
+  fi
+}
+
 draw() {
   clear
-  echo "─── $(pwd)  [↑↓ navigieren, → rein, ← raus, ESC beenden] ───"
+  echo "─── $(pwd) ───"
   echo "  insgesamt: ${count}"
   for i in "${!lines[@]}"; do
     IFS='|' read -r rawline name <<<"${lines[$i]}"
@@ -54,30 +75,24 @@ while true; do
   if [[ $key == $'\e' ]]; then # Pfeiltasten Steuerung und ESC
     read -rsn2 -t 0.05 rest
     case "$rest" in
-    '[A')
-      ((selected > 0)) && ((selected--))
-      ;;
-    '[B')
-      ((selected < count - 1)) && ((selected++))
-      ;;
-    '[C')
-      IFS='|' read -r rawline name <<<"${lines[$selected]}"
-      if [[ "${rawline:0:1}" == "d" ]]; then
-        cd "$name"
-        load_dir
-      fi
-      ;;
-    '[D')
-      cd ..
-      load_dir
-      ;;
+    '[A') move_up ;;
+    '[B') move_down ;;
+    '[C') dic_down ;;
+    '[D') dic_up ;;
     '')
       echo -e "\nBeendet."
       break
       ;;
     esac
-  elif [[ $key == "n" ]]; then # Tasten Funktionen
-    nvim
+  else
+    case $key in      # Tasten Funktionen
+    "k") move_up ;;   # Pfeil hoch
+    "j") move_down ;; # Pfeil runter
+    "l") dic_down ;;  # Pfeil rechts
+    "h") dic_up ;;    # Pfeil links
+    "n") nvim ;;      # Neovim
+
+    esac
   fi
 
   draw
