@@ -5,11 +5,13 @@ Ein shell-script das mir eine Ordnerstruktur im Terminal anzeigt und dem ich bes
 
 ## Compiliren
 For dem ersten mal starten muss das Projekt kompiliert werden.
-Die Datei die man dann ausführen kann heißt ./mytree.sh
+Entweder man führt ./compile.sh aus um zu bild und run zumachen.
+Oder man fürt ./build.sh aus und dann ./mytree.sh
 
 ## Requierments
 
-Installiert: 
-  nvim
-  fzf
+| Software      | Kürzel        | Zweck          |
+|---------------|---------------|----------------|
+| Neovim        | nvim          | open Editor im aktuellen Ordner  |
+| Fuzzy Finder  | fzf           | Unterordner weite Suche um Ordenr / Dateien zu finden  |
 
