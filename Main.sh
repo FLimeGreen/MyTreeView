@@ -64,15 +64,15 @@ while true; do
       ;;
     esac
   else
-    case $key in      # Tasten Funktionen
-    "k") move_up ;;   # Pfeil hoch
-    "j") move_down ;; # Pfeil runter
-    "l") dic_down ;;  # Pfeil rechts
-    "h") dic_up ;;    # Pfeil links
-    "n") nvim ;;      # Neovim
-    "s") search_dic ;;
-    "S") search_all ;;
-    "o") toggle_order_dir ;;
+    case $key in             # Tasten Funktionen
+    "k") move_up ;;          # Pfeil hoch
+    "j") move_down ;;        # Pfeil runter
+    "l") dic_down ;;         # Pfeil rechts
+    "h") dic_up ;;           # Pfeil links
+    "n") nvim ;;             # Neovim
+    "s") search_dic ;;       # Search dic
+    "S") search_all ;;       # Search dic and fils
+    "o") toggle_order_dir ;; # Order sortieren
 
     esac
   fi
