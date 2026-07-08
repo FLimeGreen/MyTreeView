@@ -15,3 +15,9 @@ Oder man fürt ./build.sh aus und dann ./mytree.sh
 | Neovim        | nvim          | open Editor im aktuellen Ordner  |
 | Fuzzy Finder  | fzf           | Unterordner weite Suche um Ordenr / Dateien zu finden  |
 
+## To DO 
+
+- <R> für ausführen einzelner Dateien
+- <strg r> für config of run dir
+ - wenn command "" oder " " dann löschen und nicht aus config entfernen.
+

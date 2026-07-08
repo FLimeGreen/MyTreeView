@@ -56,6 +56,7 @@ while true; do
     "s") search_dic ;;       # Search dic
     "S") search_all ;;       # Search dic and fils
     "o") toggle_order_dir ;; # Order sortieren
+    "r") run_dir ;;          # führt dic run befehl aus
 
     esac
   fi

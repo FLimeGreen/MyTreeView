@@ -1,6 +1,6 @@
 start_pos_draw=0
-draw_length=20
 
+draw_length=20
 draw() {
   clear
   echo "─── $(pwd) ───"
