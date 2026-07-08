@@ -23,27 +23,8 @@ load_dir() {
 
   # Reset Selection
   selected=0
+  start_pos_draw=0
   count=${#lines[@]}
-}
-
-draw() {
-  clear
-  echo "─── $(pwd) ───"
-  echo "  insgesamt: ${count}"
-  for i in "${!lines[@]}"; do
-    IFS='|' read -r rawline name <<<"${lines[$i]}"
-    filetype="${rawline:0:1}"
-    prefix=" "
-    if [[ "$filetype" == "d" ]]; then
-      prefix="/"
-    fi
-    if [ "$i" -eq "$selected" ]; then
-      echo -e "\e[7m${prefix} ${name}\e[0m"
-    else
-      echo "${prefix} ${name}"
-    fi
-  done
-  echo ""
 }
 
 load_dir
