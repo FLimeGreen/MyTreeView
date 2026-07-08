@@ -34,7 +34,9 @@ draw
 
 while true; do
   IFS= read -rsn1 key
-  if [[ $key == $'\e' ]]; then # Pfeiltasten Steuerung und ESC
+  if [[ -z $key ]]; then
+    dic_down
+  elif [[ $key == $'\e' ]]; then # Pfeiltasten Steuerung und ESC
     read -rsn2 -t 0.05 rest
     case "$rest" in
     '[A') move_up ;;
