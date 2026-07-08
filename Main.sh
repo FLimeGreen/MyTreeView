@@ -14,7 +14,9 @@ load_dir() {
     else
       if [[ "$line" =~ [A-Za-z]{3}\ +[0-9]+\ [0-9]{2}:[0-9]{2}\ (.*) ]]; then
         name="${BASH_REMATCH[1]}"
-        lines+=("$line|$name")
+        if [[ $name != ".." ]]; then
+          lines+=("$line|$name")
+        fi
       fi
     fi
   done < <(LC_ALL=C ls -la)
