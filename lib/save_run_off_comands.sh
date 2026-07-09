@@ -1,4 +1,4 @@
-run_command() {
+save_run_command() {
   local cmd="$1"
   local saved_tty
   saved_tty=$(stty -g)

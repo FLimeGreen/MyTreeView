@@ -29,7 +29,7 @@ run_dir() {
   pwd_now=$(pwd)
   if [[ -n "${dictionary_run_commands[$pwd_now]+x}" ]]; then # key existiert?
     echo "run: ${dictionary_run_commands[$pwd_now]}"
-    bash -c "${dictionary_run_commands[$pwd_now]}"
+    save_run_command "${dictionary_run_commands[$pwd_now]}"
   else
     set_new_dir_run_command "$pwd_now"
   fi

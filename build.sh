@@ -12,6 +12,7 @@ cat lib/dictionary_order.sh >>mytree.sh
 cat lib/dictionary_draw.sh >>mytree.sh
 
 cat lib/run_command.sh >>mytree.sh
+cat lib/save_run_off_comands.sh >>mytree.sh
 
 cat Main.sh >>mytree.sh
 
