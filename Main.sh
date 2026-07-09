@@ -29,6 +29,7 @@ load_dir() {
   count=${#lines[@]}
 }
 
+load_config
 load_dir
 draw
 
@@ -60,6 +61,7 @@ while true; do
     "o") toggle_order_dir ;;                     # Order sortieren
     "r") run_dir ;;                              # führt dic run befehl aus
     $'\x12') set_new_dir_run_command "$(pwd)" ;; # Strg+R - Edit dic run
+    $'\x19') run_config_editor ;;                # Runs config editor
 
     esac
   fi

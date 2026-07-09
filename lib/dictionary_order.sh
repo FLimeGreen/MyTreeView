@@ -1,5 +1,3 @@
-isorder=false
-
 order_dir() {
   if [[ "$isorder" == true ]]; then
     local -a dirlist
