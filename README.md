@@ -17,7 +17,35 @@ Oder man fürt ./build.sh aus und dann ./mytree.sh
 
 ## To DO 
 
-- <R> für ausführen einzelner Dateien
-- <strg r> für config of run dir
- - wenn command "" oder " " dann löschen und nicht aus config entfernen.
+### Algemein
+- Option für . und .. Anzeigen oder nicht
 
+### Command Interface
+- c für manuelle Comand eingabe
+- <R> für ausführen einzelner Dateien
+
+### Datei System Operationen
+- Dateien erstellen.
+- Dateien umbennen.
+- Dateien löschen.
+
+ Weiß nicht ob das zu stark ist...
+- Ordner erstellen
+- Ordner umbennen
+- Ordner löschen
+
+## Tasten Kombinationen
+| Taste      | Aktion                                                   |
+|------------|----------------------------------------------------------|
+| ↑ / k      | Zeile hoch                                               |
+| ↓ / j      | Zeile runter                                             |
+| → / l      | Verzeichnis öffnen                                       |
+| ← / h      | Verzeichnis hoch (cd ..)                                 |
+| n          | Neovim öffnen                                            |
+| s          | Verzeichnisse durchsuchen (fzf)                          |
+| S          | Verzeichnisse und Dateien durchsuchen (fzf)              |
+| o          | Sortierung umschalten (Ordner zuerst an/aus)             |
+| r          | Gespeicherten Befehl für aktuelles Verzeichnis ausführen |
+| Strg+R     | Befehl für aktuelles Verzeichnis setzen / löschen        |
+| Strg+Y     | Config Editor öffnen                                     |
+| ESC        | Programm beenden                                         |
