@@ -5,6 +5,8 @@ config_file="$HOME/.config/mytree/config"
 load_config() {
   draw_length=$(load_value "draw_length" "20")
   isorder=$(load_value "isorder" "false")
+  show_single_dot_inventory=$(load_value "show_single_dot_inventory" "false")
+  show_dobble_dot_inventory=$(load_value "show_dobble_dot_inventory" "false")
 }
 
 save_value() {
@@ -16,7 +18,7 @@ save_value() {
 
   if grep -q "^${key}|" "$config_file"; then
     # Zeile existiert — ersetzen
-    sed -i "s|^${key}|.*|${key}|${value}|" "$config_file"
+    sed -i "s#^${key}|.*#${key}|${value}#" "$config_file"
   else
     # Zeile existiert nicht — anhängen
     echo "${key}|${value}" >>"$config_file"
@@ -25,7 +27,10 @@ save_value() {
 
 load_value() {
   local key="$1"
+  local fallback="$2"
   if grep -q "^${key}|" "$config_file"; then
     grep "^${key}|" "$config_file" | cut -d'|' -f2
+  else
+    echo $fallback
   fi
 }

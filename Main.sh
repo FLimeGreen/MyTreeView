@@ -14,7 +14,9 @@ load_dir() {
     else
       if [[ "$line" =~ [A-Za-z]{3}\ +[0-9]+\ [0-9]{2}:[0-9]{2}\ (.*) ]]; then
         name="${BASH_REMATCH[1]}"
-        if [[ $name != ".." ]]; then
+        if [[ "$show_single_dot_inventory" == true && "$name" == "." ]] ||
+          [[ "$show_dobble_dot_inventory" == true && "$name" == ".." ]] ||
+          [[ "$name" != "." && "$name" != ".." ]]; then
           lines+=("$line|$name")
         fi
       fi

@@ -3,14 +3,20 @@
 declare -a config_keys=(
   "draw_length"
   "isorder"
+  "show_single_dot_inventory"
+  "show_dobble_dot_inventory"
 )
 declare -A config_labels=(
   ["draw_length"]="Anzahl angezeigte Zeilen"
   ["isorder"]="Ordner zuerst"
+  ["show_single_dot_inventory"]="Zeigt den Ordner /.  an"
+  ["show_dobble_dot_inventory"]="Zeigt den Ordner /.. an"
 )
 declare -A config_handlers=(
   ["draw_length"]="set_draw_length"
   ["isorder"]="set_isorder"
+  ["show_single_dot_inventory"]="set_show_single_dot_inventory"
+  ["show_dobble_dot_inventory"]="set_show_dobble_dot_inventory"
 )
 
 config_selected=0
@@ -24,7 +30,7 @@ draw_config() {
   for i in "${!config_keys[@]}"; do
     local key="${config_keys[$i]}"
     local label="${config_labels[$key]}"
-    local value="${!key}" # Wert der Variable mit diesem Namen
+    local value=$(load_value "${key}" "${!key}") # Wert der Variable mit diesem Namen
 
     if ((i == config_selected)); then
       if [[ "$config_editing" == true ]]; then
@@ -99,6 +105,30 @@ set_isorder() {
     isorder="$val"
     save_value "isorder" "$val"
     order_dir
+  else
+    echo "Ungültiger Wert: true oder false"
+    sleep 1
+  fi
+}
+
+set_show_single_dot_inventory() {
+  local val="$1"
+  if [[ "$val" == "true" || "$val" == "false" ]]; then
+    show_single_dot_inventory="$val"
+    save_value "show_single_dot_inventory" "$val"
+    load_dir
+  else
+    echo "Ungültiger Wert: true oder false"
+    sleep 1
+  fi
+}
+
+set_show_dobble_dot_inventory() {
+  local val="$1"
+  if [[ "$val" == "true" || "$val" == "false" ]]; then
+    show_dobble_dot_inventory="$val"
+    save_value "show_dobble_dot_inventory" "$val"
+    load_dir
   else
     echo "Ungültiger Wert: true oder false"
     sleep 1
