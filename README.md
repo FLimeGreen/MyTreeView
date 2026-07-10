@@ -18,21 +18,21 @@ Oder man fürt ./build.sh aus und dann ./mytree.sh
 ## To DO 
 
 ### Algemein
-- Option für . und .. Anzeigen oder nicht
+[x] Option für . und .. Anzeigen oder nicht
 
 ### Command Interface
-- c für manuelle Comand eingabe
-- <R> für ausführen einzelner Dateien
+[ ] c für manuelle Comand eingabe
+[ ] <R> für ausführen einzelner Dateien
 
 ### Datei System Operationen
-- Dateien erstellen.
-- Dateien umbennen.
-- Dateien löschen.
+[ ] Dateien erstellen.
+[ ] Dateien umbennen.
+[ ] Dateien löschen.
 
  Weiß nicht ob das zu stark ist...
-- Ordner erstellen
-- Ordner umbennen
-- Ordner löschen
+[ ] Ordner erstellen
+[ ] Ordner umbennen
+[ ] Ordner löschen
 
 ## Tasten Kombinationen
 | Taste      | Aktion                                                   |
