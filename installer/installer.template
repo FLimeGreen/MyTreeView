@@ -1,0 +1,142 @@
+
+set -e
+
+MODE=""
+
+case "$1" in
+    --local)
+        MODE="local"
+        ;;
+    --global)
+        MODE="global"
+        ;;
+    *)
+        echo "MyTree Installer"
+        echo
+        echo "Choose installation type:"
+        echo "1) Local install (current user)"
+        echo "2) Global install (all users)"
+        echo
+
+        printf "Selection [1/2]: "
+        read choice
+
+        case "$choice" in
+            1)
+                MODE="local"
+                ;;
+            2)
+                MODE="global"
+                ;;
+            *)
+                echo "Invalid selection."
+                exit 1
+                ;;
+        esac
+        ;;
+esac
+
+
+if [ "$MODE" = "local" ]; then
+
+    BIN_DIR="$HOME/.local/bin"
+    INSTALL_DIR="$HOME/.local/share/mytree"
+
+    PROGRAM="$INSTALL_DIR/mytree"
+    LINK="$BIN_DIR/mytree"
+
+    mkdir -p "$INSTALL_DIR"
+    mkdir -p "$BIN_DIR"
+
+    # PATH prüfen und ggf. ergänzen
+    case ":$PATH:" in
+        *":$BIN_DIR:"*)
+            echo "$BIN_DIR is already in PATH."
+            ;;
+        *)
+            echo "$BIN_DIR is missing in PATH. Adding..."
+
+            PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
+
+            CONFIGS="
+            $HOME/.bashrc
+            $HOME/.bash_profile
+            $HOME/.profile
+            $HOME/.zshrc
+            "
+
+            UPDATED=0
+
+            for config in $CONFIGS; do
+                if [ -f "$config" ]; then
+                    if ! grep -Fq "# >>> MyTree PATH >>>" "$config"; then
+                        printf '\n# >>> MyTree PATH >>>\n%s\n# <<< MyTree PATH <<<\n' \
+                            "$PATH_LINE" >> "$config"
+
+                        echo "Updated $config"
+                        UPDATED=1
+                    fi
+                fi
+            done
+
+            if [ "$UPDATED" -eq 0 ]; then
+                echo "No shell config found."
+                echo "Please add manually:"
+                echo "$PATH_LINE"
+            fi
+            ;;
+    esac
+
+    echo "Installing MyTree locally to:"
+    echo "  $INSTALL_DIR"
+
+
+elif [ "$MODE" = "global" ]; then
+
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "Global installation requires root."
+        echo "Use:"
+        echo "  sudo $0 --global"
+        exit 1
+    fi
+
+    INSTALL_DIR="/usr/local/lib/mytree"
+    BIN_DIR="/usr/local/bin"
+
+    PROGRAM="$INSTALL_DIR/mytree"
+    LINK="$BIN_DIR/mytree"
+
+    mkdir -p "$INSTALL_DIR"
+
+    echo "Installing MyTree globally to:"
+    echo "  $INSTALL_DIR"
+
+fi
+
+
+# Payload extrahieren
+PAYLOAD_LINE=$(awk '/^__PAYLOAD_BELOW__$/ {print NR + 1; exit}' "$0")
+
+if [ -z "$PAYLOAD_LINE" ]; then
+    echo "Installer payload missing."
+    exit 1
+fi
+
+tail -n +"$PAYLOAD_LINE" "$0" > "$PROGRAM"
+chmod +x "$PROGRAM"
+
+
+# Symlink setzen
+ln -sf "$PROGRAM" "$LINK"
+
+
+echo
+echo "MyTree installed successfully."
+echo
+echo "Run:"
+echo "  mytree"
+
+
+exit 0
+
+__PAYLOAD_BELOW__
