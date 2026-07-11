@@ -1,17 +1,41 @@
 #!/bin/bash
 
-echo "Building MyTree"
-./build.sh
+set -e
+
+echo "Checking MyTree build"
+
+PAYLOAD="out/mytree"
+TEMPLATE="installer/installer.template"
+OUT_INSTALLER="out/installer.sh"
+
+if [ ! -f "$PAYLOAD" ]; then
+    echo "Missing build: $PAYLOAD"
+    echo "Run ./build_mytree.sh first."
+    exit 1
+fi
+
+echo "MyTree build found."
 
 echo "Building installer"
 
-OUT_INSTALLER="out/installer.sh"
+if [ ! -f "$TEMPLATE" ]; then
+    echo "Missing template: $TEMPLATE"
+    exit 1
+fi
 
-# Create installer
-cat installer/installer.stub >"$OUT_INSTALLER"
-echo >>"$OUT_INSTALLER"
-cat out/mytree >>"$OUT_INSTALLER"
+mkdir -p out
+
+# Installer Header + Template
+cat > "$OUT_INSTALLER" <<EOF
+#!/bin/bash
+EOF
+
+cat "$TEMPLATE" >> "$OUT_INSTALLER"
+
+# Payload anhängen
+cat "$PAYLOAD" >> "$OUT_INSTALLER"
 
 chmod +x "$OUT_INSTALLER"
 
-echo "installer build."
+echo "Installer built:"
+echo "  $OUT_INSTALLER"
