@@ -1,0 +1,119 @@
+
+set -e
+
+MODE=""
+
+case "$1" in
+    --local)
+        MODE="local"
+        ;;
+    --global)
+        MODE="global"
+        ;;
+    *)
+        echo "MyTree Uninstaller"
+        echo
+        echo "Choose uninstall type:"
+        echo "1) Local uninstall (current user)"
+        echo "2) Global uninstall (all users)"
+        echo
+
+        printf "Selection [1/2]: "
+        read choice
+
+        case "$choice" in
+            1)
+                MODE="local"
+                ;;
+            2)
+                MODE="global"
+                ;;
+            *)
+                echo "Invalid selection."
+                exit 1
+                ;;
+        esac
+        ;;
+esac
+
+
+if [ "$MODE" = "local" ]; then
+
+    BIN_DIR="$HOME/.local/bin"
+    INSTALL_DIR="$HOME/.local/share/mytree"
+
+    LINK="$BIN_DIR/mytree"
+    PROGRAM="$INSTALL_DIR/mytree"
+
+    echo "Removing local MyTree installation..."
+
+    rm -f "$LINK"
+    rm -f "$PROGRAM"
+
+
+    # PATH Block entfernen
+    CONFIGS="
+    $HOME/.bashrc
+    $HOME/.bash_profile
+    $HOME/.profile
+    $HOME/.zshrc
+    "
+
+    for config in $CONFIGS; do
+        if [ -f "$config" ]; then
+            if grep -Fq "# >>> MyTree PATH >>>" "$config"; then
+                echo "Updating $config"
+
+                TMP_FILE="${config}.tmp"
+
+                awk '
+                /# >>> MyTree PATH >>>/ {
+                    remove=1
+                    next
+                }
+                /# <<< MyTree PATH <<</ {
+                    remove=0
+                    next
+                }
+                !remove {
+                    print
+                }
+                ' "$config" > "$TMP_FILE"
+
+                mv "$TMP_FILE" "$config"
+            fi
+        fi
+    done
+
+
+    # Leere Verzeichnisse entfernen
+    rmdir "$INSTALL_DIR" 2>/dev/null || true
+
+
+elif [ "$MODE" = "global" ]; then
+
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "Global uninstall requires root."
+        echo "Use:"
+        echo "  sudo $0 --global"
+        exit 1
+    fi
+
+
+    INSTALL_DIR="/usr/local/lib/mytree"
+    LINK="/usr/local/bin/mytree"
+    PROGRAM="$INSTALL_DIR/mytree"
+
+
+    echo "Removing global MyTree installation..."
+
+    rm -f "$LINK"
+    rm -f "$PROGRAM"
+
+    rmdir "$INSTALL_DIR" 2>/dev/null || true
+
+fi
+
+
+echo
+echo "MyTree uninstalled successfully."
