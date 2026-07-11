@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -e
+
+# Benutzer-Installationsverzeichnis
+INSTALL_DIR="$HOME/.local/share/mytree"
+BIN_DIR="$HOME/.local/bin"
+
+mkdir -p "$INSTALL_DIR"
+mkdir -p "$BIN_DIR"
+
+PROGRAM="$INSTALL_DIR/mytree"
+LINK="$BIN_DIR/mytree"
+
+echo "Installing MyTree to $INSTALL_DIR"
+
+# Payload extrahieren
+PAYLOAD_LINE=$(awk '/^__PAYLOAD_BELOW__$/ {print NR + 1; exit}' "$0")
+
+tail -n +"$PAYLOAD_LINE" "$0" >"$PROGRAM"
+chmod +x "$PROGRAM"
+
+# Symlink erstellen
+ln -sf "$PROGRAM" "$LINK"
+
+# PATH setzen
+PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
+
+CONFIGS="
+$HOME/.bashrc
+$HOME/.bash_profile
+$HOME/.profile
+$HOME/.zshrc
+"
+
+for config in $CONFIGS; do
+  [ -f "$config" ] || continue
+
+  if ! grep -Fq "# >>> MyTree PATH >>>" "$config"; then
+    printf '\n# >>> MyTree PATH >>>\n%s\n# <<< MyTree PATH <<<\n' "$PATH_LINE" >>"$config"
+    echo "Updated $config"
+  fi
+done
+
+echo "MyTree installed."
+echo
+echo "Please reload your shell:"
+echo "  source ~/.zshrc   # for zsh"
+echo "  source ~/.bashrc  # for bash"
+echo
+echo "After reloading run:"
+echo "  mytree"
+
+exit 0
+
+__PAYLOAD_BELOW__
