@@ -29,8 +29,8 @@ load_value() {
   local key="$1"
   local fallback="$2"
 
-  # Check if Config file existiert
-  if [[ -f "$config_file" ]]; then
+  # Check if Config file nicht existiert
+  if [[ ! -f "$config_file" ]]; then
     echo $fallback
   else # Check ob wert existiert
     if grep -q "^${key}|" "$config_file"; then
