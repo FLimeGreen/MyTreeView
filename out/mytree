@@ -1,0 +1,449 @@
+#!/bin/bash
+# In dieser Datei werden alle Parameter und benutzer preferenzen und eingaben gespeicher.
+config_file="$HOME/.config/mytree/config"
+
+# Hier werden alle config Parameter definiert
+load_config() {
+  draw_length=$(load_value "draw_length" "20")
+  isorder=$(load_value "isorder" "false")
+  show_single_dot_inventory=$(load_value "show_single_dot_inventory" "false")
+  show_dobble_dot_inventory=$(load_value "show_dobble_dot_inventory" "false")
+}
+
+save_value() {
+  local key="$1"
+  local value="$2"
+
+  mkdir -p "$(dirname "$config_file")"
+  touch "$config_file"
+
+  if grep -q "^${key}|" "$config_file"; then
+    # Zeile existiert — ersetzen
+    sed -i "s#^${key}|.*#${key}|${value}#" "$config_file"
+  else
+    # Zeile existiert nicht — anhängen
+    echo "${key}|${value}" >>"$config_file"
+  fi
+}
+
+load_value() {
+  local key="$1"
+  local fallback="$2"
+  if grep -q "^${key}|" "$config_file"; then
+    grep "^${key}|" "$config_file" | cut -d'|' -f2
+  else
+    echo $fallback
+  fi
+}
+config_editor_remove_one_letter() {
+  config_input="${config_input%?}"
+}
+
+config_editor_save_edited_changes() {
+  local cfg_key="${config_keys[$config_selected]}"
+  local handler="${config_handlers[$cfg_key]}"
+  $handler "$config_input" # Handler aufrufen
+  config_editing=false
+  config_input=""
+}
+
+config_editor_edit_abbrechen() {
+  config_editing=false
+  config_input=""
+}
+config_editor_move_up() {
+  ((config_selected > 0)) && ((config_selected--))
+}
+
+config_editor_move_down() {
+  ((config_selected < ${#config_keys[@]} - 1)) && ((config_selected++))
+}
+
+config_editor_select_to_edit() {
+  config_editing=true
+  local cfg_key="${config_keys[$config_selected]}"
+  config_input=$(load_value "${cfg_key}" "${!cfg_key}") # aktuellen Wert als Startwert
+}
+# Config Editor
+# Alle editierbaren Einstellungen mit Name, Wert und Handler-Funktion
+declare -a config_keys=(
+  "draw_length"
+  "isorder"
+  "show_single_dot_inventory"
+  "show_dobble_dot_inventory"
+)
+declare -A config_labels=(
+  ["draw_length"]="Anzahl angezeigte Zeilen"
+  ["isorder"]="Ordner zuerst"
+  ["show_single_dot_inventory"]="Zeigt den Ordner /.  an"
+  ["show_dobble_dot_inventory"]="Zeigt den Ordner /.. an"
+)
+declare -A config_handlers=(
+  ["draw_length"]="set_draw_length"
+  ["isorder"]="set_isorder"
+  ["show_single_dot_inventory"]="set_show_single_dot_inventory"
+  ["show_dobble_dot_inventory"]="set_show_dobble_dot_inventory"
+)
+
+config_selected=0
+config_input=""
+config_editing=false
+
+draw_config() {
+  clear
+  echo "─── Config Editor [↑↓/jk navigieren, Enter/l auswählen, ESC zurück] ───"
+  echo ""
+  for i in "${!config_keys[@]}"; do
+    local key="${config_keys[$i]}"
+    local label="${config_labels[$key]}"
+    local value=$(load_value "${key}" "${!key}") # Wert der Variable mit diesem Namen
+
+    if ((i == config_selected)); then
+      if [[ "$config_editing" == true ]]; then
+        echo -e "  \e[7m${label}\e[0m  >  ${config_input}_" # Eingabe anzeigen
+      else
+        echo -e "  \e[7m${label}  =  ${value}\e[0m"
+      fi
+    else
+      echo "  ${label}  =  ${value}"
+    fi
+  done
+  echo ""
+}
+
+run_config_editor() {
+  config_selected=0
+  config_editing=false
+  config_input=""
+  draw_config
+
+  while true; do
+    IFS= read -rsn1 key
+
+    if [[ "$config_editing" == true ]]; then
+      if [[ -z $key ]]; then
+        config_editor_save_edited_changes # Enter
+      else
+        case "$key" in
+        $'\x7f') config_editor_remove_one_letter ;;   # Backspace
+        $'\x0c') config_editor_save_edited_changes ;; # Strg+L
+        $'\e') config_editor_edit_abbrechen ;;        # ESC = abbrechen
+        *) config_input+="$key" ;;                    # Zeichen anhängen
+        esac
+      fi
+    else
+      if [[ -z $key ]]; then
+        config_editor_select_to_edit
+      elif [[ $key == $'\e' ]]; then
+        read -rsn5 -t 0.05 rest
+        case "${key}${rest}" in
+        $'\e[A') config_editor_move_up ;;
+        $'\e[B') config_editor_move_down ;;
+        $'\e') return ;; # Leave config Editor
+        esac
+      else
+        case "$key" in
+        "k") config_editor_move_up ;;
+        "j") config_editor_move_down ;;
+        "l") config_editor_select_to_edit ;; # l = Editing starten
+        esac
+      fi
+    fi
+    draw_config
+  done
+}
+
+# Handler Funktionen
+set_draw_length() {
+  local val="$1"
+  if [[ "$val" =~ ^[0-9]+$ ]] && ((val > 0)); then
+    draw_length="$val"
+    save_value "draw_length" "$val"
+  else
+    echo "Ungültiger Wert: muss eine positive Zahl sein"
+    sleep 1
+  fi
+}
+
+set_isorder() {
+  local val="$1"
+  if [[ "$val" == "true" || "$val" == "false" ]]; then
+    isorder="$val"
+    save_value "isorder" "$val"
+    order_dir
+  else
+    echo "Ungültiger Wert: true oder false"
+    sleep 1
+  fi
+}
+
+set_show_single_dot_inventory() {
+  local val="$1"
+  if [[ "$val" == "true" || "$val" == "false" ]]; then
+    show_single_dot_inventory="$val"
+    save_value "show_single_dot_inventory" "$val"
+    load_dir
+  else
+    echo "Ungültiger Wert: true oder false"
+    sleep 1
+  fi
+}
+
+set_show_dobble_dot_inventory() {
+  local val="$1"
+  if [[ "$val" == "true" || "$val" == "false" ]]; then
+    show_dobble_dot_inventory="$val"
+    save_value "show_dobble_dot_inventory" "$val"
+    load_dir
+  else
+    echo "Ungültiger Wert: true oder false"
+    sleep 1
+  fi
+}
+start_pos_draw=0
+
+draw() {
+  clear
+  echo "─── $(pwd) ───"
+  echo "  insgesamt: ${count}"
+
+  # Start und Ende berechnen
+  local end=$((start_pos_draw + draw_length))
+  if ((end > count)); then
+    end=$count
+  fi
+
+  for ((i = start_pos_draw; i < end; i++)); do
+    IFS='|' read -r rawline name <<<"${lines[$i]}"
+    local filetype="${rawline:0:1}"
+    local prefix=" "
+    if [[ "$filetype" == "d" ]]; then
+      prefix="/"
+    fi
+    if ((i == selected)); then
+      echo -e "\e[7m${prefix} ${name}\e[0m"
+    else
+      echo "${prefix} ${name}"
+    fi
+  done
+  echo ""
+}
+move_up() {
+  ((selected > 0)) && ((selected--))
+
+  if ((selected < start_pos_draw)); then
+    start_pos_draw=$((selected))
+  fi
+}
+
+move_down() {
+  ((selected < count - 1)) && ((selected++))
+
+  if ((selected >= start_pos_draw + draw_length)); then
+    start_pos_draw=$((selected - draw_length + 1))
+  fi
+}
+
+dic_up() {
+  cd ..
+  load_dir
+}
+
+dic_down() {
+  IFS='|' read -r rawline name <<<"${lines[$selected]}"
+  if [[ "${rawline:0:1}" == "d" ]]; then
+    cd "$name"
+    load_dir
+  fi
+}
+order_dir() {
+  if [[ "$isorder" == true ]]; then
+    local -a dirlist
+    local -a itemlist
+
+    for item in "${lines[@]}"; do         # [@] für Array-Iteration
+      if [[ "${item:0:1}" == "d" ]]; then # $ und Anführungszeichen
+        dirlist+=("$item")                # Klammern beim Anhängen
+      else
+        itemlist+=("$item")
+      fi
+    done
+
+    lines=("${dirlist[@]}" "${itemlist[@]}") # Arrays zusammenfügen
+  fi
+}
+
+toggle_order_dir() {
+  if [[ "$isorder" == true ]]; then
+    isorder=false
+  else
+    isorder=true
+  fi
+
+  load_dir # Aktuallisiere ansicht.
+}
+# $1 = "dirs" oder "all"
+# $2 = startverzeichnis
+
+search_dic() {
+  result=$(search "dirs" "$(pwd)")
+  if [[ -n "$result" && -d "$result" ]]; then
+    cd "$result"
+    load_dir
+  fi
+}
+
+search_all() {
+  result=$(search "all" "$(pwd)")
+  if [[ -n "$result" ]]; then
+    cd "$(dirname "$result")"
+    load_dir
+  fi
+}
+
+search() {
+  local mode="${1:-all}"
+  local startdir="${2:-.}"
+  local result
+
+  if [[ "$mode" == "dirs" ]]; then
+    result=$(find "$startdir" -mindepth 1 -type d 2>/dev/null | fzf --prompt="Ordner suchen: " --layout=reverse)
+  else
+    result=$(find "$startdir" -mindepth 1 2>/dev/null | fzf --prompt="Suchen: " --layout=reverse)
+  fi
+
+  echo "$result"
+}
+declare -A dictionary_run_commands
+
+# Save and load
+save_dic_run_commands() {
+  for dir in "${!dictionary_run_commands[@]}"; do
+    save_value "run_dic_cmd:${dir}" "${dictionary_run_commands[$dir]}"
+  done
+}
+
+delete_dic_run_value() {
+  local key="$1"
+  sed -i "/^${key}|/d" "$config_file" # Zeile mit diesem Key löschen
+}
+
+load_dic_run_commands() {
+  while IFS='|' read -r key value; do
+    if [[ "$key" == run_dic_cmd:* ]]; then
+      dir="${key#run_dic_cmd:}" # Prefix entfernen
+      dictionary_run_commands["$dir"]="$value"
+    fi
+  done <"$config_file"
+}
+
+# Aktionen
+load_dic_run_commands
+
+run_dir() {
+  local pwd_now
+  pwd_now=$(pwd)
+  if [[ -n "${dictionary_run_commands[$pwd_now]+x}" ]]; then # key existiert?
+    echo "run: ${dictionary_run_commands[$pwd_now]}"
+    save_run_command "${dictionary_run_commands[$pwd_now]}"
+  else
+    set_new_dir_run_command "$pwd_now"
+  fi
+}
+
+set_new_dir_run_command() {
+  local dir="$1"
+  local cmd
+  read -rp "Befehl für $dir: " cmd
+  if [[ -z "${cmd// /}" ]]; then
+    if [[ -n "${dictionary_run_commands[$dir]+x}" ]]; then # $ und +x für Key-Existenz
+      unset "dictionary_run_commands[$dir]"                # Key wirklich löschen
+      delete_dic_run_value "run_cmd:${dir}"                # aus config entfernen
+      echo "Befehl gelöscht"
+    else
+      echo "Kein Befehl eingegeben"
+    fi
+  else
+    dictionary_run_commands["$dir"]="$cmd"
+    save_dic_run_commands
+  fi
+}
+save_run_command() {
+  local cmd="$1"
+  local saved_tty
+  saved_tty=$(stty -g)
+  bash -c "$cmd"
+  stty "$saved_tty"
+}
+# Liest Dateien/Verzeichnisse aus `ls -la` in ein Array
+# und lässt den User mit den Pfeiltasten durch die Zeilen navigieren
+
+declare -a lines
+selected=0
+
+load_dir() {
+  lines=()
+  # ls -la einlesen (ohne Headerzeile "total N")
+  SkipFirstLine=true
+  while IFS= read -r line; do
+    if [[ $SkipFirstLine == true ]]; then
+      SkipFirstLine=false
+    else
+      if [[ "$line" =~ [A-Za-z]{3}\ +[0-9]+\ [0-9]{2}:[0-9]{2}\ (.*) ]]; then
+        name="${BASH_REMATCH[1]}"
+        if [[ "$show_single_dot_inventory" == true && "$name" == "." ]] ||
+          [[ "$show_dobble_dot_inventory" == true && "$name" == ".." ]] ||
+          [[ "$name" != "." && "$name" != ".." ]]; then
+          lines+=("$line|$name")
+        fi
+      fi
+    fi
+  done < <(LC_ALL=C ls -la)
+
+  order_dir
+
+  # Reset Selection
+  selected=0
+  start_pos_draw=0
+  count=${#lines[@]}
+}
+
+load_config
+load_dir
+draw
+
+while true; do
+  IFS= read -rsn1 key
+  if [[ -z $key ]]; then
+    dic_down
+  elif [[ $key == $'\e' ]]; then # Pfeiltasten Steuerung und ESC
+    read -rsn2 -t 0.05 rest
+    case "$rest" in
+    '[A') move_up ;;
+    '[B') move_down ;;
+    '[C') dic_down ;;
+    '[D') dic_up ;;
+    '')
+      echo -e "\nBeendet."
+      break
+      ;;
+    esac
+  else
+    case $key in                                 # Tasten Funktionen
+    "k") move_up ;;                              # Pfeil hoch
+    "j") move_down ;;                            # Pfeil runter
+    "l") dic_down ;;                             # Pfeil rechts
+    "h") dic_up ;;                               # Pfeil links
+    "n") nvim ;;                                 # Neovim
+    "s") search_dic ;;                           # Search dic
+    "S") search_all ;;                           # Search dic and fils
+    "o") toggle_order_dir ;;                     # Order sortieren
+    "r") run_dir ;;                              # führt dic run befehl aus
+    $'\x12') set_new_dir_run_command "$(pwd)" ;; # Strg+R - Edit dic run
+    $'\x19') run_config_editor ;;                # Runs config editor
+
+    esac
+  fi
+
+  draw
+done
